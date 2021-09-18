@@ -1,0 +1,89 @@
+<canvas id=canvas style="border: 1px solid">
+    <script>
+        let size = 200, // canvas size
+            tile = 10, // tile size
+            world = size / tile - 1, // world size
+
+            score = 0,
+
+            head,
+            body = [],
+            apple,
+
+            keys = [], // pressed keys
+
+            ctx = canvas.getContext('2d'),
+
+            rect = pair => ctx.fillRect(pair.x * tile, pair.y * tile, tile, tile), // draw rectangle
+
+            rand = () => Math.random() * world | 0, // random number between 0 and world
+
+            replace = () => apple = { // replace apple
+                x: rand(),
+                y: rand()
+            };
+        
+
+        document.onkeydown = event => {
+            let key = event.which; // get the key number
+
+            if([65,68,83,87].includes(key)) { // if one of WASD numbers
+                keys = []; // unpress all keys
+                keys[key] = 1; // press this key down
+            }
+        };
+
+
+        head = { // set head position
+            x:rand(),
+            y:rand()
+        };
+        replace(); // set apple position
+
+        canvas.width = canvas.height = size; // resize canvas
+
+
+        setInterval(() => { // main interval loop
+            let eat_x = head.x + (keys[68] | 0 - keys[65] | 0), // where snake eats now
+                eat_y = head.y + (keys[83] | 0 - keys[87] | 0);
+            
+            body = [head, ...body]; // add head position to body parts list
+
+            if(eat_x == apple.x & eat_y == apple.y) { // if eating apple
+                replace(); // replace the apple
+                score++; // add 1 to score
+            } else {
+                body.pop(); // otherwise, remove the last body part
+            }
+
+            body.some(part => {
+                if(part.x == apple.x & part.y == apple.y) { // if the apple was placed on the snake
+                    replace();  // replace the apple, do not increase score
+                }
+            });
+
+            if(eat_x < 0 | eat_x > world | eat_y < 0 | eat_y > world | body.some(part => { // if the snake goes out of bounds, or collides with itself
+                eat_x == part.x & eat_y == part.y
+            })) {
+                location.reload(); // start reloading the page to reset
+                alert('Game Over!\nScore: ' + score); // alert the score
+            }
+
+            head = { // move the head to what it's eating
+                x: eat_x,
+                y: eat_y
+            };
+
+
+            ctx.clearRect(0, 0, size, size); // clear the canvas
+
+            ctx.fillStyle = 'red'; // draw the apple in red
+            rect(apple);
+
+            ctx.fillStyle = 'green'; // draw the body in green
+            body.forEach(rect);
+
+            ctx.fillStyle = 'lime'; // draw the head in lime
+            rect(head);
+        }, 250)
+    </script>
